@@ -1,0 +1,98 @@
+{
+  "AdvertisementRecord": {
+    "cbor": "a301a701a10162733102020301046273340502060007a201010219012c0262733203627333",
+    "message": "AdvertisementRecord"
+  },
+  "BindingDecl": {
+    "cbor": "a701a10162733102020301046273340502060007a201010219012c",
+    "message": "BindingDecl"
+  },
+  "ChangeEvent": {
+    "cbor": "a601a1016273310202030104182a05a2016273310219012c0643060102",
+    "message": "ChangeEvent"
+  },
+  "GladeId": {
+    "cbor": "a101627331",
+    "message": "GladeId"
+  },
+  "GladeIdManifest": {
+    "cbor": "a3016273310262733203a101627331",
+    "message": "GladeIdManifest"
+  },
+  "OriginMeta": {
+    "cbor": "a2016273310219012c",
+    "message": "OriginMeta"
+  },
+  "Retention": {
+    "cbor": "a201010219012c",
+    "message": "Retention"
+  },
+  "edge/advert": {
+    "cbor": "a301a701a10168646f632e626f64790201030004f60501060007a2010102f6026a6772617a656c2d617070036b646f633a34322f626f6479",
+    "message": "AdvertisementRecord"
+  },
+  "edge/binding-account-commons": {
+    "cbor": "a701a1016d616363742e73657474696e67730200030004f60500060007a2010002f6",
+    "message": "BindingDecl"
+  },
+  "edge/binding-deployment-window": {
+    "cbor": "a701a1016a7379732e6e6f746963650205030004f60502060007a2010002f6",
+    "message": "BindingDecl"
+  },
+  "edge/binding-doc-commons-log": {
+    "cbor": "a701a10168646f632e626f64790201030004f60501060007a2010102f6",
+    "message": "BindingDecl"
+  },
+  "edge/binding-exchange": {
+    "cbor": "a701a1016a6772617a656c2e72756e0204030004f60501060007a2010002f6",
+    "message": "BindingDecl"
+  },
+  "edge/binding-external-private-ttl": {
+    "cbor": "a701a1016a646f632e637572736f720203030104656d6574656f0501060107a2010202191388",
+    "message": "BindingDecl"
+  },
+  "edge/binding-message-private": {
+    "cbor": "a701a10168646f632e636861740202030004f60501060107a2010102f6",
+    "message": "BindingDecl"
+  },
+  "edge/change-delta": {
+    "cbor": "a601a10168646f632e626f64790201030104182905a201666e6f64652d61020c0648617070656e646564",
+    "message": "ChangeEvent"
+  },
+  "edge/change-min": {
+    "cbor": "a601a1016d616363742e73657474696e67730200030004f605f60640",
+    "message": "ChangeEvent"
+  },
+  "edge/change-refresh": {
+    "cbor": "a601a10168646f632e626f64790201030004f605a201666e6f64652d61020c0643010203",
+    "message": "ChangeEvent"
+  },
+  "edge/gladeid": {
+    "cbor": "a101716772617a656c2e776f726b737061636573",
+    "message": "GladeId"
+  },
+  "edge/gladeid-unicode": {
+    "cbor": "a10171636166c3a92e6e6f74c495732ef09f9880",
+    "message": "GladeId"
+  },
+  "edge/manifest": {
+    "cbor": "a3016a6772617a656c2d617070026b646f633a34322f626f647903a10168646f632e626f6479",
+    "message": "GladeIdManifest"
+  },
+  "edge/origin-meta": {
+    "cbor": "a201666e6f64652d61020c",
+    "message": "OriginMeta"
+  },
+  "edge/retention-cursor": {
+    "cbor": "a2010102f6",
+    "message": "Retention"
+  },
+  "edge/retention-latest": {
+    "cbor": "a2010002f6",
+    "message": "Retention"
+  },
+  "edge/retention-ttl": {
+    "cbor": "a2010202197530",
+    "message": "Retention"
+  }
+}

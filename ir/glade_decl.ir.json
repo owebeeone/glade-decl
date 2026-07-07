@@ -1,0 +1,453 @@
+{
+  "version": 1,
+  "shapes": {
+    "unary": {
+      "payload": "whole",
+      "history": "none",
+      "initiation": "pull",
+      "writers": "single",
+      "events": [
+        "value"
+      ],
+      "delivery": "once"
+    },
+    "atom": {
+      "payload": "whole-state",
+      "history": "latest",
+      "initiation": "pull|push",
+      "writers": "single",
+      "events": [
+        "replace"
+      ],
+      "delivery": "stream"
+    },
+    "log": {
+      "payload": "whole",
+      "history": "append-only",
+      "initiation": "pull|push",
+      "writers": "source",
+      "events": [
+        "append"
+      ],
+      "delivery": "stream"
+    },
+    "stream": {
+      "payload": "whole-or-delta",
+      "history": "none",
+      "initiation": "push",
+      "writers": "source",
+      "events": [
+        "event"
+      ],
+      "delivery": "stream"
+    },
+    "swmr": {
+      "payload": "delta",
+      "history": "reconstructible",
+      "initiation": "push",
+      "writers": "single",
+      "events": [
+        "delta",
+        "reset",
+        "snapshot"
+      ],
+      "delivery": "stream"
+    },
+    "snapshot_delta": {
+      "payload": "delta",
+      "history": "reconstructible",
+      "initiation": "push",
+      "writers": "single",
+      "events": [
+        "delta",
+        "snapshot"
+      ],
+      "delivery": "stream"
+    },
+    "crdt": {
+      "payload": "ops",
+      "history": "reconstructible",
+      "initiation": "push-bidi",
+      "writers": "multi-merge",
+      "events": [
+        "op",
+        "sync"
+      ],
+      "delivery": "stream"
+    }
+  },
+  "enums": [
+    {
+      "name": "Shape",
+      "members": {
+        "value": 0,
+        "log": 1,
+        "message": 2,
+        "stream": 3,
+        "exchange": 4,
+        "window": 5
+      }
+    },
+    {
+      "name": "Authority",
+      "members": {
+        "share": 0,
+        "external": 1
+      }
+    },
+    {
+      "name": "DomainAnchor",
+      "members": {
+        "account": 0,
+        "document": 1,
+        "deployment": 2
+      }
+    },
+    {
+      "name": "ZoneKind",
+      "members": {
+        "commons": 0,
+        "private": 1
+      }
+    },
+    {
+      "name": "RetentionPolicy",
+      "members": {
+        "latest": 0,
+        "from_cursor": 1,
+        "ttl": 2
+      }
+    },
+    {
+      "name": "ChangeKind",
+      "members": {
+        "refresh": 0,
+        "delta": 1
+      }
+    }
+  ],
+  "messages": [
+    {
+      "name": "GladeId",
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "id",
+          "tag": 1,
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "Retention",
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "policy",
+          "tag": 1,
+          "type": {
+            "k": "enum",
+            "name": "RetentionPolicy"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "ttl_ms",
+          "tag": 2,
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "BindingDecl",
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "glade_id",
+          "tag": 1,
+          "type": {
+            "k": "msg",
+            "name": "GladeId"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "shape",
+          "tag": 2,
+          "type": {
+            "k": "enum",
+            "name": "Shape"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "authority",
+          "tag": 3,
+          "type": {
+            "k": "enum",
+            "name": "Authority"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "source",
+          "tag": 4,
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "domain",
+          "tag": 5,
+          "type": {
+            "k": "enum",
+            "name": "DomainAnchor"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "zone",
+          "tag": 6,
+          "type": {
+            "k": "enum",
+            "name": "ZoneKind"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "retention",
+          "tag": 7,
+          "type": {
+            "k": "msg",
+            "name": "Retention"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "AdvertisementRecord",
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "binding",
+          "tag": 1,
+          "type": {
+            "k": "msg",
+            "name": "BindingDecl"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "package",
+          "tag": 2,
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "grip_key",
+          "tag": 3,
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "OriginMeta",
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "origin",
+          "tag": 1,
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "seq",
+          "tag": 2,
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "ChangeEvent",
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "glade_id",
+          "tag": 1,
+          "type": {
+            "k": "msg",
+            "name": "GladeId"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "shape",
+          "tag": 2,
+          "type": {
+            "k": "enum",
+            "name": "Shape"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "kind",
+          "tag": 3,
+          "type": {
+            "k": "enum",
+            "name": "ChangeKind"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "base_seq",
+          "tag": 4,
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "origin_meta",
+          "tag": 5,
+          "type": {
+            "k": "msg",
+            "name": "OriginMeta"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "payload",
+          "tag": 6,
+          "type": {
+            "k": "scalar",
+            "scalar": "bytes"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "GladeIdManifest",
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "package_id",
+          "tag": 1,
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "grip_key",
+          "tag": 2,
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "glade_id",
+          "tag": 3,
+          "type": {
+            "k": "msg",
+            "name": "GladeId"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    }
+  ],
+  "services": [],
+  "extensions": []
+}
