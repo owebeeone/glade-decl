@@ -43,6 +43,10 @@
     "cbor": "a701a10168646f632e626f64790201030004f60501060007a2010102f6",
     "message": "BindingDecl"
   },
+  "edge/binding-doc-swmr": {
+    "cbor": "a701a1016877732e66696c65730206030004f60501060007a2010102f6",
+    "message": "BindingDecl"
+  },
   "edge/binding-exchange": {
     "cbor": "a701a1016a6772617a656c2e72756e0204030004f60501060007a2010002f6",
     "message": "BindingDecl"

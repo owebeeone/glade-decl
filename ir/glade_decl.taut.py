@@ -48,7 +48,7 @@ SCHEMA = schema(
     # (each shape's payload/delta type lives in its own taut-shape schema). Open
     # registry — `text_crdt` and friends are additive later (DeclSurface).
     Enum("Shape",
-         value=0, log=1, message=2, stream=3, exchange=4, window=5),
+         value=0, log=1, message=2, stream=3, exchange=4, window=5, swmr=6),
     # Who authored the surface: `share` (produced within this share space) vs
     # `external` (bridged from a named outside source; BindingDecl.source names
     # it).

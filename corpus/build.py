@@ -99,6 +99,9 @@ def curated_values() -> dict[str, tuple[str, dict]]:
             glade_id="acct.settings", shape="value", authority="share",
             domain="account", zone="commons", policy="latest")),
         "edge/binding-doc-commons-log": ("BindingDecl", b_share_commons),
+        "edge/binding-doc-swmr": ("BindingDecl", _binding(
+            glade_id="ws.files", shape="swmr", authority="share",
+            domain="document", zone="commons", policy="from_cursor")),
         "edge/binding-external-private-ttl": ("BindingDecl", b_external_private),
         "edge/binding-deployment-window": ("BindingDecl", _binding(
             glade_id="sys.notice", shape="window", authority="share",
