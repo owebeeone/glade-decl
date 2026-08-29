@@ -257,7 +257,8 @@
         "stream": 3,
         "exchange": 4,
         "window": 5,
-        "swmr": 6
+        "swmr": 6,
+        "crdt": 7
       }
     },
     {

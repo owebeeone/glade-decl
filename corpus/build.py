@@ -102,6 +102,9 @@ def curated_values() -> dict[str, tuple[str, dict]]:
         "edge/binding-doc-swmr": ("BindingDecl", _binding(
             glade_id="ws.files", shape="swmr", authority="share",
             domain="document", zone="commons", policy="from_cursor")),
+        "edge/binding-doc-crdt": ("BindingDecl", _binding(
+            glade_id="doc.collaborative-notes", shape="crdt", authority="share",
+            domain="document", zone="commons", policy="from_cursor")),
         "edge/binding-external-private-ttl": ("BindingDecl", b_external_private),
         "edge/binding-deployment-window": ("BindingDecl", _binding(
             glade_id="sys.notice", shape="window", authority="share",

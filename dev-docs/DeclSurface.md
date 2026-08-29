@@ -24,7 +24,7 @@ seams-at-inception rule: the wall exists from day one, even around a stub.
 | Item | What it is |
 | --- | --- |
 | `GladeId` | stable share-space address + the GQ-6 derivation/pinning rules (derive from package id + grip key; frozen once shared; renames are alias records) |
-| `Shape` | the delivery-shape enum (`value`, `log`, `message`, `stream`, `exchange`, `window`…) — names taut-shape contracts, owns none of them |
+| `Shape` | the delivery-shape enum (`value`, `log`, `message`, `stream`, `exchange`, `window`, `swmr`, `crdt`) — names taut-shape engines, owns none of them; `text_crdt` is a profile over `crdt` |
 | `Authority` | `share` \| `external(source)` |
 | `Domain` / `Zone` | the ZONES vocabulary (`glade/dev-docs/GladeZones.md`, implemented 2026-06-14): domain = which replicated world (→ wire `share`); zone = who converges within it — `commons` \| `private(self)` + future axes (→ wire `key`). The binder's scope maps them at bind time. |
 | `BindingDecl` | `(glade id, shape, authority, domain, zone, retention)` — the unit a tap declares and glial binds (a *surface*, in zones terms) |

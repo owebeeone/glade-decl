@@ -46,9 +46,11 @@ SCHEMA = schema(
     # ---- vocabulary enums ---------------------------------------------------
     # The delivery-shape enum: NAMES the taut-shape contracts, owns none of them
     # (each shape's payload/delta type lives in its own taut-shape schema). Open
-    # registry — `text_crdt` and friends are additive later (DeclSurface).
+    # registry — CRDT names the canonical engine; text_crdt is its payload
+    # profile and therefore is not a second delivery shape.
     Enum("Shape",
-         value=0, log=1, message=2, stream=3, exchange=4, window=5, swmr=6),
+         value=0, log=1, message=2, stream=3, exchange=4, window=5, swmr=6,
+         crdt=7),
     # Who authored the surface: `share` (produced within this share space) vs
     # `external` (bridged from a named outside source; BindingDecl.source names
     # it).
