@@ -63,8 +63,17 @@ python3 corpus/build.py --check    # CI drift gate (fails if committed artifacts
 ```
 
 `build.py` also regenerates `../glade-decl-rs/src/vectors.rs` when that crate is
-present. The taut builder is bootstrapped from the sibling `../taut/src` (gwz
-workspace layout).
+present. That Rust output is passed through **`rustfmt`** — on the write path and
+on the `--check` path alike — so the committed file is what `cargo fmt` leaves and
+the gate compares like with like. **`rustfmt` is a requirement of the gate**
+whenever the sibling crate is present: if it is not on `PATH`, `build.py` fails
+loudly rather than compare unformatted output against formatted files
+(`rustup component add rustfmt`). The edition comes from the crate's `Cargo.toml`
+and a crate `rustfmt.toml` / `.rustfmt.toml` is honoured, so `cargo fmt` in
+`glade-decl-rs` and this generator cannot disagree.
+
+The taut builder is bootstrapped from the sibling `../taut/src` (gwz workspace
+layout).
 
 ## Rendering (how the sibling repos are generated)
 
@@ -76,6 +85,16 @@ PYTHONPATH=../taut/src python3 -m taut.cli gen ir/glade_decl.taut.py \
     -o <out> -l typescript --api-only --with-runtime    # api.ts + codec/cbor/schema runtime
 PYTHONPATH=../taut/src python3 -m taut.cli gen ir/glade_decl.taut.py \
     -o <out> -l python --api-only                        # api.py (dataclasses)
+```
+
+For Rust, once the generated files are copied into the crate, format them — the
+compiler emits unformatted code, and formatted is the convention the corpus gate
+compares against:
+
+```sh
+cp <out>/rust/*.rs ../glade-decl-rs/src/    # api.rs + cbor.rs + ext.rs
+python3 corpus/build.py                     # rewrites ../glade-decl-rs/src/vectors.rs (rustfmt'd)
+cd ../glade-decl-rs && cargo fmt            # api.rs: the compiler does not format its own output
 ```
 
 Generated files are COMMITTED in the rendering repos (consumers install a plain

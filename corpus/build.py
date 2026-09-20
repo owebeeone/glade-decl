@@ -12,9 +12,15 @@ This mirrors taut's own `glade_build.py`: it also re-exports the language-neutra
 IR (`ir/glade_decl.ir.json`) and, when a sibling `glade-decl-rs` crate exists,
 regenerates the Rust byte-parity harness (`glade-decl-rs/src/vectors.rs`).
 
+Generated Rust is passed through `rustfmt` before it is written AND before
+`--check` compares it, so the committed file is what `cargo fmt` leaves and the
+gate compares like with like. `rustfmt` is therefore REQUIRED whenever the
+sibling crate is present: a missing one is a hard error, never a silent
+comparison of unformatted output against formatted files.
+
 Run from the glade-decl repo root:
-  python3 corpus/build.py            # write ir/glade_decl.ir.json + corpus/decl.v0.json (+ rs vectors)
-  python3 corpus/build.py --check    # exit nonzero if any committed artifact is stale (CI gate)
+  python3 corpus/build.py            # write ir/glade_decl.ir.json + corpus/decl.v0.json (+ rustfmt'd rs vectors)
+  python3 corpus/build.py --check    # exit nonzero if any committed artifact is stale (CI gate; needs rustfmt)
 
 The taut builder is bootstrapped from the sibling `../taut/src` (gwz layout).
 """
@@ -24,6 +30,8 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -33,7 +41,10 @@ WORKSPACE = REPO.parent
 SCHEMA_PY = REPO / "ir" / "glade_decl.taut.py"
 IR_JSON = REPO / "ir" / "glade_decl.ir.json"
 GOLDEN = CORPUS_DIR / "decl.v0.json"
-RS_VECTORS = WORKSPACE / "glade-decl-rs" / "src" / "vectors.rs"
+RS_CRATE = WORKSPACE / "glade-decl-rs"
+RS_CARGO_TOML = RS_CRATE / "Cargo.toml"
+RS_VECTORS = RS_CRATE / "src" / "vectors.rs"
+RS_FMT_CONFIGS = ("rustfmt.toml", ".rustfmt.toml")
 
 # Bootstrap the taut builder (sibling gwz member), mirroring the schema module.
 sys.path.insert(0, str(WORKSPACE / "taut" / "src"))
@@ -155,15 +166,51 @@ def _golden_text(schema: Schema) -> str:
     return kit.golden_json(corpus)
 
 
+def _rust_edition() -> str:
+    """The crate's own edition — rustfmt must parse what `cargo fmt` parses."""
+    match = re.search(r'(?m)^\s*edition\s*=\s*"([^"]+)"',
+                      RS_CARGO_TOML.read_text())
+    if match is None:
+        raise SystemExit(f"no `edition` in {RS_CARGO_TOML} — cannot format the "
+                         "generated Rust the way `cargo fmt` would.")
+    return match.group(1)
+
+
+def _rustfmt(text: str) -> str:
+    """Format generated Rust via rustfmt's stdin/stdout (no temp file in tree).
+
+    Both the write path and `--check` go through here, so the gate never
+    compares unformatted output against formatted, committed files.
+    """
+    cmd = ["rustfmt", "--edition", _rust_edition(), "--emit", "stdout"]
+    for name in RS_FMT_CONFIGS:
+        config = RS_CRATE / name
+        if config.exists():
+            cmd += ["--config-path", str(config)]
+            break
+    try:
+        done = subprocess.run(cmd, input=text, capture_output=True, text=True)
+    except FileNotFoundError:
+        raise SystemExit("rustfmt not found on PATH — it is REQUIRED by the "
+                         "glade-decl drift gate: the generated Rust is "
+                         "formatted before it is written and before --check "
+                         "compares it. Install: `rustup component add rustfmt`.")
+    if done.returncode != 0:
+        raise SystemExit(f"rustfmt failed ({done.returncode}) on the generated "
+                         f"Rust:\n{done.stderr}")
+    return done.stdout
+
+
 def _vectors_text(schema: Schema) -> str:
     corpus = kit.build_corpus(schema, glade_decl_values(schema))
-    return rust_vectors(schema, corpus)
+    return _rustfmt(rust_vectors(schema, corpus))
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true",
-                        help="exit nonzero if any committed artifact is stale")
+                        help="exit nonzero if any committed artifact is stale "
+                             "(the Rust vectors are rustfmt'd first, as on write)")
     args = parser.parse_args(argv)
 
     schema = _load_schema()
