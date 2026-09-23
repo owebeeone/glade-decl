@@ -258,7 +258,8 @@
         "exchange": 4,
         "window": 5,
         "swmr": 6,
-        "crdt": 7
+        "crdt": 7,
+        "atom": 8
       }
     },
     {
@@ -435,36 +436,25 @@
       ]
     },
     {
-      "name": "AdvertisementRecord",
+      "name": "ShapeProfileDecl",
       "reserved_tags": [],
       "reserved_names": [],
       "next_id": null,
       "fields": [
         {
-          "name": "binding",
+          "name": "glade_id",
           "tag": 1,
           "type": {
             "k": "msg",
-            "name": "BindingDecl"
+            "name": "GladeId"
           },
           "optional": false,
           "transient": false,
           "merge": null
         },
         {
-          "name": "package",
+          "name": "profile",
           "tag": 2,
-          "type": {
-            "k": "scalar",
-            "scalar": "str"
-          },
-          "optional": false,
-          "transient": false,
-          "merge": null
-        },
-        {
-          "name": "grip_key",
-          "tag": 3,
           "type": {
             "k": "scalar",
             "scalar": "str"

@@ -1,8 +1,4 @@
 {
-  "AdvertisementRecord": {
-    "cbor": "a301a701a10162733102020301046273340502060007a201010219012c0262733203627333",
-    "message": "AdvertisementRecord"
-  },
   "BindingDecl": {
     "cbor": "a701a10162733102020301046273340502060007a201010219012c",
     "message": "BindingDecl"
@@ -27,9 +23,13 @@
     "cbor": "a201010219012c",
     "message": "Retention"
   },
-  "edge/advert": {
-    "cbor": "a301a701a10168646f632e626f64790201030004f60501060007a2010102f6026a6772617a656c2d617070036b646f633a34322f626f6479",
-    "message": "AdvertisementRecord"
+  "ShapeProfileDecl": {
+    "cbor": "a201a10162733102627332",
+    "message": "ShapeProfileDecl"
+  },
+  "edge/binding-account-atom": {
+    "cbor": "a701a1016d616363742e70726573656e63650208030004f60500060007a2010002f6",
+    "message": "BindingDecl"
   },
   "edge/binding-account-commons": {
     "cbor": "a701a1016d616363742e73657474696e67730200030004f60500060007a2010002f6",
