@@ -7,6 +7,8 @@ is recorded here so it stays visible for the implementation step. None of N1–N
 expand the surface beyond §Contents; each is additive-friendly. N7–N9 and the
 retired-name record at the end come from the v1 amendment's rulings (R1–R11,
 ruled 2026-09-23 in the root's `dev-docs/glade/GladeDeclReconciliation.md` §3).
+N10 and N11 come from the amendment's acceptance review (the root's
+`dev-docs/glade/GladeDeclAmendment-RemPlan.md`).
 
 ## N1 — Domain modeled as an anchor kind, not a concrete id
 `DomainAnchor { account, document, deployment }`. The spec says a surface's
@@ -37,9 +39,11 @@ ttl}` + `ttl_ms`. `windowed`, which one app-file surface used, is not a member:
 a window is an application projection over a base shape (GDL-041), so that
 surface declares `from_cursor` and keeps its window app-side. **Deferred past
 v1:** enforcement — the policy is declarative and nothing applies it (GC-4,
-open) — and a duration in an app file: `ttl_ms` carries it in the record, but a
-binding line cannot state it until the node parses R11(a)'s `ttl=<duration>`
-tail key. **Spelling:** an app file writes `from-cursor`, the hyphen only;
+open) — and a recorded duration: `ttl_ms` carries one in the record, and a
+binding line states it with R11(a)'s `ttl=<duration>` tail key, but the node
+validates the tail keys `ttl=<duration>` and `shape-profile=<profile>` and
+records neither, so no record carries a duration or a profile yet.
+**Spelling:** an app file writes `from-cursor`, the hyphen only;
 `from_cursor` is the contract's spelling, and R9(b2) has the node normalise the
 file's hyphen to it on the way into the stored record.
 
@@ -96,9 +100,11 @@ An app file writes it as a keyword tail on the binding line,
 `shape-profile=<profile>` (R11(a)). The file key is `shape-profile`, not
 `profile`, because "profile" already names the node's boot profile and an LLM
 compatibility profile in the same product; the contract's field keeps GDL-041's
-word. The key's rules, enforced at parse once the node carries the tail: refused
-on `value` and `log` (no profile exists); optional on `swmr` (omitted means the
-bare engine); required on `crdt` (glial cannot mount one without it).
+word. The key's rules, enforced at parse since Step 2.5: refused on `value` and
+`log` (no profile exists); optional on `swmr` (omitted means the bare engine);
+required on `crdt` (a `crdt` surface has no engine without one). The node checks
+the key and records nothing, so glial still takes a `crdt` mount's profile from
+its own `MountConfig.crdtProfile`.
 
 **The node persists no tail key in this amendment.** `sysdata.BindingDecl`
 gains no field: a new field changes the bytes of every stored binding record,
@@ -130,6 +136,25 @@ partition, and gryth-ui mounts through glial. The node mints no `self:` prefix
 either: it routes on opaque key bytes. **Do not rely on `private` for
 confidentiality until the glial mapping (GlialFitAssessment S6) lands.** The
 same caveat stands beside `ZoneKind` in the schema and in `README.md`.
+
+## N10 — The schema's `ttl` comment is stale since Step 2.5 (COD-P3-4)
+The `RetentionPolicy` comment in `ir/glade_decl.taut.py` (`:120-124`) says an
+app file cannot state a `ttl` duration until the node parses the binding
+line's `ttl=<duration>` tail key. Since Step 2.5 of the root's
+`dev-docs/GladeFirstSlicePlan.md` (glade `967fcdf`) the node parses and
+validates that key, and records no duration (N3). The schema is a contract
+path, so even a comment edit there would re-pin all three renderings (A1): the
+comment is corrected with the next contract change. Until then N3, `README.md`
+and `DeclSurface.md` state what the node does.
+
+## N11 — What an `external` binding with no source becomes (SUR-P3-7)
+An app file may write the authority `external`, but no token names a source
+(R5(b)), so such a line registers a binding record whose authority is
+`external` and which names no source. What those lines become once a source
+token exists — refused, or kept by loosening "`source` iff `external`" — is
+decided with the source token's design. Until then the node warns on every
+`external` line, under either header: the binding names no source yet, it
+registers, and nothing acts on it.
 
 ## Retired names
 taut reserves a retired field's tag and name only within one message

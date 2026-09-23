@@ -52,8 +52,12 @@ Authored in `ir/glade_decl.taut.py`:
 - **`ShapeProfileDecl`** — `{glade_id, profile}`: the shape profile a surface
   needs (GDL-041's `snapshot_delta` over `swmr`, `text_crdt` over `crdt`),
   keyed by glade id — a separate record, so `BindingDecl`'s bytes stay
-  untouched (R4(b)). An app file writes it as the binding line's
-  `shape-profile=<profile>` tail key (R11(a)); see `dev-docs/OpenNotes.md` N7.
+  untouched (R4(b)). An app file's binding line names the profile with the
+  `shape-profile=<profile>` tail key (R11(a)), but nothing registers a
+  `ShapeProfileDecl` yet: the node validates the tail keys `ttl=<duration>`
+  and `shape-profile=<profile>` and records neither. A `crdt` mount gets its
+  profile from glial's `MountConfig.crdtProfile` today
+  (`glial/src/binder.ts:98-106`). See `dev-docs/OpenNotes.md` N7.
 - **`AdvertisementRecord`** — **held out of v1** until GDL-029 (grok
   enumeration, still open) ratifies (R7(b)). Its name is retired, not free: it
   may come back only with its v0 shape (`dev-docs/OpenNotes.md`, "Retired
@@ -129,7 +133,7 @@ second member `from-cursor`; the contract spells it `from_cursor`.
 | --- | --- | --- |
 | `latest` (0) | the surface keeps one value, last write wins — on a `log` it silently turns an append log into a single value, and on a `crdt` it does not mean "the merged value" | `latest` |
 | `from_cursor` (1) | the history is kept, and a subscriber resumes from a position rather than from the head | `from-cursor` |
-| `ttl` (2) | records expire after a duration (`Retention.ttl_ms`) | `ttl`; the duration cannot be stated until the node parses R11(a)'s `ttl=<duration>` tail key |
+| `ttl` (2) | records expire after a duration (`Retention.ttl_ms`) | `ttl`; the line may state the duration with R11(a)'s `ttl=<duration>` tail key, which the node validates and does not record, so no record carries a duration yet |
 
 Which to write: `value` → `latest`; `log` and `swmr` → `from-cursor`; `crdt` → by
 how the surface is read — `from-cursor` if a subscriber resumes a history, `ttl`

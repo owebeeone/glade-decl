@@ -1,22 +1,29 @@
 """Tests for `corpus/build.py`'s gates: the `--compat` comparator, the
 Shape-coverage assertion (SAF-P3-8), the DeclSurface mirror check and the
-CONTRACT_VERSION pin check (A1).
+CONTRACT_VERSION pin check (A1); and for its writes, which replace a file
+rather than write through it, `--ts-from` included.
 
 stdlib `unittest` only, on plain dicts and strings — no git, no filesystem, no
 rustfmt — except the one test that reads the real schema and curated set, and
-the write test, which uses a temporary directory. Run
-from the glade-decl repo root:
+the write tests, which use a temporary directory. The `--ts-from` test also
+reads the real schema: it runs `main()` with every path it writes redirected
+into its temporary directory. Run from the glade-decl repo root, either way;
+both run every test:
 
     python3 -m unittest corpus/test_build.py -v
+    python3 corpus/test_build.py
 """
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
+import io
 import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 _BUILD_PY = Path(__file__).resolve().parent / "build.py"
 _SPEC = importlib.util.spec_from_file_location("glade_decl_corpus_build", _BUILD_PY)
@@ -186,10 +193,6 @@ class ContractPinTest(unittest.TestCase):
         self.assertIn("ir/glade_decl.taut.py", failures[0])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class WriteReplacesTest(unittest.TestCase):
     """pnpm injects `glade-decl-ts` into its consumers by HARD LINK, so a write
     into a rendering's file in place also rewrites every consumer's installed
@@ -220,3 +223,66 @@ class WriteReplacesTest(unittest.TestCase):
             build.write_artifact(ours, "{}\n")
             self.assertEqual(ours.read_text(), "{}\n")
             self.assertEqual([p.name for p in ours.parent.iterdir()], ["decl.v1.json"])
+
+
+class TsFromTest(unittest.TestCase):
+    """`--ts-from` is the TypeScript regeneration's copy step. It replaced the
+    README's `cp` onto `glade-decl-ts/src/`, which wrote through pnpm's hard
+    links into every consumer's installed copy."""
+
+    def test_ts_from_leaves_a_hard_linked_installed_copy_untouched(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            tautc_out = root / "g" / "typescript"
+            tautc_out.mkdir(parents=True)
+            (tautc_out / "api.ts").write_text("// regenerated\n")
+            src = root / "glade-decl-ts" / "src"
+            src.mkdir(parents=True)
+            ours = src / "api.ts"
+            ours.write_text("// as installed\n")
+            installed = root / "consumer" / "api.ts"   # a pnpm install's hard link
+            installed.parent.mkdir()
+            os.link(ours, installed)
+            # Every path main() writes, moved into the scratch tree. The Rust
+            # and Python renderings are absent there, so the run skips them.
+            scratch_paths = {
+                "IR_JSON": root / "glade-decl" / "ir" / "glade_decl.ir.json",
+                "GOLDEN": root / "glade-decl" / "corpus" / "decl.v1.json",
+                "RS_VECTORS": root / "glade-decl-rs" / "src" / "vectors.rs",
+                "TS_SRC": src,
+                "PY_PKG": root / "glade-decl-py" / "src" / "glade_decl",
+            }
+            real_write = build.write_artifact
+            written = []
+
+            def write_in_scratch(path, text):
+                # A path left unredirected must fail here, never be written.
+                self.assertTrue(path.is_relative_to(root), f"{path} is outside the scratch tree")
+                written.append(path)
+                real_write(path, text)
+
+            with contextlib.ExitStack() as stack:
+                for name, path in scratch_paths.items():
+                    stack.enter_context(mock.patch.object(build, name, path))
+                stack.enter_context(mock.patch.object(build, "write_artifact", write_in_scratch))
+                stack.enter_context(contextlib.redirect_stdout(io.StringIO()))
+                self.assertEqual(build.main(["--ts-from", str(tautc_out)]), 0)
+            self.assertEqual(ours.read_text(), "// regenerated\n")
+            self.assertEqual(installed.read_bytes(), b"// as installed\n")
+            self.assertEqual(os.stat(ours).st_nlink, 1)
+            # The one command also writes the IR and corpus copies that the
+            # README's second `cp` wrote.
+            self.assertIn(src / "glade_decl.ir.json", written)
+            self.assertIn(src / "decl.v1.json", written)
+
+    def test_ts_from_with_no_ts_files_is_refused(self):
+        with tempfile.TemporaryDirectory() as d:
+            empty = Path(d) / "typescript"
+            empty.mkdir()
+            with self.assertRaises(SystemExit) as raised:
+                build.ts_copies(empty, Path(d))
+            self.assertIn("no .ts files", str(raised.exception.code))
+
+
+if __name__ == "__main__":
+    unittest.main()

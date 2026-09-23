@@ -38,11 +38,19 @@ missing from v1 is named in `--deleted`; every name in `--deleted` is a v0
 vector that v1 no longer has. v1 is the corpus as BUILT from the schema, not
 the committed file, so the gate cannot pass on a stale corpus.
 
+`--ts-from <dir>` is the plain run plus the TypeScript rendering's generated
+sources: it also copies tautc's output, `<dir>/*.ts`, into
+`glade-decl-ts/src/`. Those files are written like every artifact above, by
+replacing each file, because pnpm hard-links that package's files into its
+consumers and a `cp` onto one would rewrite every consumer's installed copy.
+
 Run from the glade-decl repo root:
   python3 corpus/build.py            # write ir/glade_decl.ir.json + corpus/decl.v1.json (+ rendering artifacts)
   python3 corpus/build.py --check    # exit nonzero if anything is stale (CI gate; needs rustfmt + git)
   python3 corpus/build.py --compat --deleted AdvertisementRecord,edge/advert
                                      # exit nonzero unless v1 keeps v0's bytes, minus exactly the declared names
+  python3 corpus/build.py --ts-from /tmp/g/typescript
+                                     # the plain run, plus tautc's <dir>/*.ts into ../glade-decl-ts/src/
 
 The taut builder is bootstrapped from the sibling `../taut/src` (gwz layout).
 """
@@ -433,6 +441,27 @@ def _artifacts(schema: Schema, corpus: dict[str, dict]) -> list[tuple[Path, str]
     return artifacts
 
 
+def ts_copies(source: Path, dest: Path) -> list[tuple[Path, str]]:
+    """`--ts-from`: tautc's TypeScript output, `source/*.ts`, as artifacts bound
+    for the rendering's `dest` directory, so `write_artifact` writes them the
+    way it writes every artifact. Each file's text is kept exactly as tautc
+    wrote it. A missing rendering, or a `source` with no `.ts` file, is an
+    error before anything is written."""
+    if not dest.is_dir():
+        raise SystemExit(f"--ts-from: no TypeScript rendering at {dest} — the "
+                         f"glade-decl-ts sibling is not checked out.")
+    files = sorted(source.glob("*.ts"))
+    if not files:
+        raise SystemExit(f"--ts-from: no .ts files in {source} — generate them "
+                         f"first (`taut.cli gen … -l typescript --api-only "
+                         f"--with-runtime`).")
+    copies = []
+    for file in files:
+        with file.open(encoding="utf-8", newline="") as fh:
+            copies.append((dest / file.name, fh.read()))
+    return copies
+
+
 def write_artifact(path: Path, text: str) -> None:
     """Write `text` to `path` by REPLACING the file, never by writing through it.
 
@@ -546,6 +575,11 @@ def main(argv: list[str] | None = None) -> int:
                       help="exit nonzero unless the corpus built from the schema "
                            "keeps every v0 vector's bytes (v0 read from git at "
                            f"{V0_REV[:7]}), minus exactly the --deleted names")
+    mode.add_argument("--ts-from", metavar="DIR",
+                      help="the plain run, plus tautc's TypeScript output "
+                           "(DIR/*.ts) copied into ../glade-decl-ts/src/ by "
+                           "replacing each file, never writing through it: "
+                           "pnpm hard-links that package into its consumers")
     parser.add_argument("--deleted", metavar="NAME[,NAME...]",
                         help="with --compat: the v0 vectors v1 deletes on purpose")
     args = parser.parse_args(argv)
@@ -562,6 +596,8 @@ def main(argv: list[str] | None = None) -> int:
     artifacts = _artifacts(schema, corpus)
     if args.check:
         return _check(artifacts)
+    if args.ts_from is not None:
+        artifacts += ts_copies(Path(args.ts_from), TS_SRC)
 
     for p, text in artifacts:
         write_artifact(p, text)
