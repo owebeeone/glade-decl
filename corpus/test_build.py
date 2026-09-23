@@ -3,7 +3,8 @@ Shape-coverage assertion (SAF-P3-8), the DeclSurface mirror check and the
 CONTRACT_VERSION pin check (A1).
 
 stdlib `unittest` only, on plain dicts and strings — no git, no filesystem, no
-rustfmt — except the one test that reads the real schema and curated set. Run
+rustfmt — except the one test that reads the real schema and curated set, and
+the write test, which uses a temporary directory. Run
 from the glade-decl repo root:
 
     python3 -m unittest corpus/test_build.py -v
@@ -12,6 +13,8 @@ from the glade-decl repo root:
 from __future__ import annotations
 
 import importlib.util
+import os
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -185,3 +188,35 @@ class ContractPinTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WriteReplacesTest(unittest.TestCase):
+    """pnpm injects `glade-decl-ts` into its consumers by HARD LINK, so a write
+    into a rendering's file in place also rewrites every consumer's installed
+    copy. The build must replace a file, never write through it."""
+
+    def test_a_write_leaves_a_hard_linked_copy_untouched(self):
+        with tempfile.TemporaryDirectory() as d:
+            ours = Path(d) / "glade_decl.ir.json"
+            ours.write_text("v0\n")
+            installed = Path(d) / "installed.json"
+            os.link(ours, installed)
+            build.write_artifact(ours, "v1\n")
+            self.assertEqual(ours.read_text(), "v1\n")
+            self.assertEqual(installed.read_text(), "v0\n")
+            self.assertEqual(os.stat(ours).st_nlink, 1)
+
+    def test_a_write_keeps_the_file_mode(self):
+        with tempfile.TemporaryDirectory() as d:
+            ours = Path(d) / "vectors.rs"
+            ours.write_text("old\n")
+            os.chmod(ours, 0o640)
+            build.write_artifact(ours, "new\n")
+            self.assertEqual(os.stat(ours).st_mode & 0o777, 0o640)
+
+    def test_a_write_creates_a_missing_file_and_its_directory(self):
+        with tempfile.TemporaryDirectory() as d:
+            ours = Path(d) / "new" / "decl.v1.json"
+            build.write_artifact(ours, "{}\n")
+            self.assertEqual(ours.read_text(), "{}\n")
+            self.assertEqual([p.name for p in ours.parent.iterdir()], ["decl.v1.json"])

@@ -52,8 +52,10 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import re
 import subprocess
+import tempfile
 import sys
 from collections.abc import Iterable
 from pathlib import Path
@@ -431,6 +433,34 @@ def _artifacts(schema: Schema, corpus: dict[str, dict]) -> list[tuple[Path, str]
     return artifacts
 
 
+def write_artifact(path: Path, text: str) -> None:
+    """Write `text` to `path` by REPLACING the file, never by writing through it.
+
+    pnpm injects `glade-decl-ts` into its consumers by HARD LINK, so a write
+    into one of its files in place would also rewrite every consumer's
+    installed copy (it did, once, for `glade_decl.ir.json`). A temporary file
+    beside the target, renamed over it, leaves those copies as installed; the
+    target keeps its file mode, and a new file gets the umask's default.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        mode = path.stat().st_mode & 0o777
+    else:
+        umask = os.umask(0)
+        os.umask(umask)
+        mode = 0o666 & ~umask
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        os.chmod(tmp, mode)
+        os.replace(tmp, path)
+    except BaseException:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+        raise
+
+
 # --- the modes --------------------------------------------------------------
 
 
@@ -534,8 +564,7 @@ def main(argv: list[str] | None = None) -> int:
         return _check(artifacts)
 
     for p, text in artifacts:
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(text)
+        write_artifact(p, text)
         print(f"wrote {p} ({len(text)} bytes)")
     return 0
 
