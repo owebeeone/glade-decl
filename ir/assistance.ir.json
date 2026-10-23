@@ -1,0 +1,600 @@
+{
+  "version": 2,
+  "options": {},
+  "effective": {
+    "max_depth": 32,
+    "max_encoded_len": null
+  },
+  "shapes": {
+    "unary": {
+      "name": "unary",
+      "class": "interaction",
+      "core": null,
+      "contract_version": "v1",
+      "fixed_profile": {},
+      "delivery": "once",
+      "events": [
+        "value"
+      ],
+      "operations": [
+        "call"
+      ],
+      "payload": "whole",
+      "history": "none",
+      "initiation": "pull",
+      "writers": "single",
+      "ordering": "none",
+      "retention": "none",
+      "position": "none",
+      "recovery": "not_applicable",
+      "merge": "none",
+      "lifecycle": "request_response"
+    },
+    "value": {
+      "name": "value",
+      "class": "engine",
+      "core": "value",
+      "contract_version": "v0",
+      "fixed_profile": {},
+      "delivery": "once",
+      "events": [
+        "value"
+      ],
+      "operations": [
+        "read",
+        "set"
+      ],
+      "payload": "whole-state",
+      "history": "materialized",
+      "initiation": "pull|push",
+      "writers": "multi-attributed",
+      "ordering": "lww_lamport_origin",
+      "retention": "materialized_winner",
+      "position": "op_identity",
+      "recovery": "materialized_read",
+      "merge": "attributed_lww",
+      "lifecycle": "persistent_register"
+    },
+    "atom": {
+      "name": "atom",
+      "class": "engine",
+      "core": "atom",
+      "contract_version": "v1",
+      "fixed_profile": {},
+      "delivery": "stream",
+      "events": [
+        "replace"
+      ],
+      "operations": [
+        "read",
+        "replace",
+        "subscribe"
+      ],
+      "payload": "whole-state",
+      "history": "latest",
+      "initiation": "pull|push",
+      "writers": "single",
+      "ordering": "scalar_version",
+      "retention": "latest",
+      "position": "version",
+      "recovery": "latest_refresh",
+      "merge": "sequential_overwrite",
+      "lifecycle": "mailbox_terminal"
+    },
+    "log": {
+      "name": "log",
+      "class": "engine",
+      "core": "log",
+      "contract_version": "v1",
+      "fixed_profile": {},
+      "delivery": "stream",
+      "events": [
+        "append"
+      ],
+      "operations": [
+        "append",
+        "read",
+        "subscribe"
+      ],
+      "payload": "whole",
+      "history": "append-only",
+      "initiation": "pull|push",
+      "writers": "source",
+      "ordering": "scalar_sequence",
+      "retention": "bounded_records",
+      "position": "cursor",
+      "recovery": "expire_below_floor",
+      "merge": "none",
+      "lifecycle": "mailbox_terminal"
+    },
+    "stream": {
+      "name": "stream",
+      "class": "engine",
+      "core": "stream",
+      "contract_version": "v1",
+      "fixed_profile": {},
+      "delivery": "stream",
+      "events": [
+        "event"
+      ],
+      "operations": [
+        "publish",
+        "subscribe"
+      ],
+      "payload": "whole-or-delta",
+      "history": "none",
+      "initiation": "push",
+      "writers": "source",
+      "ordering": "live_session",
+      "retention": "none",
+      "position": "none",
+      "recovery": "none",
+      "merge": "none",
+      "lifecycle": "live_terminal"
+    },
+    "swmr": {
+      "name": "swmr",
+      "class": "engine",
+      "core": "swmr",
+      "contract_version": "v1",
+      "fixed_profile": {},
+      "delivery": "stream",
+      "events": [
+        "delta",
+        "reset",
+        "snapshot"
+      ],
+      "operations": [
+        "publish_delta",
+        "publish_snapshot",
+        "read",
+        "reset",
+        "subscribe"
+      ],
+      "payload": "delta",
+      "history": "reconstructible",
+      "initiation": "push",
+      "writers": "single",
+      "ordering": "scalar_epoch_sequence",
+      "retention": "snapshot_bounded_deltas",
+      "position": "epoch_cursor",
+      "recovery": "in_band_reset_repair",
+      "merge": "sequential_single_writer",
+      "lifecycle": "mailbox_terminal"
+    },
+    "snapshot_delta": {
+      "name": "snapshot_delta",
+      "class": "profile",
+      "core": "swmr",
+      "contract_version": "v1",
+      "fixed_profile": {
+        "recovery": "expire"
+      },
+      "delivery": "stream",
+      "events": [
+        "delta",
+        "snapshot"
+      ],
+      "operations": [
+        "publish_delta",
+        "publish_snapshot",
+        "read",
+        "subscribe"
+      ],
+      "payload": "delta",
+      "history": "reconstructible",
+      "initiation": "push",
+      "writers": "single",
+      "ordering": "scalar_epoch_sequence",
+      "retention": "snapshot_bounded_deltas",
+      "position": "epoch_cursor",
+      "recovery": "expire",
+      "merge": "sequential_single_writer",
+      "lifecycle": "mailbox_terminal"
+    },
+    "crdt": {
+      "name": "crdt",
+      "class": "engine",
+      "core": "crdt",
+      "contract_version": "v1",
+      "fixed_profile": {},
+      "delivery": "stream",
+      "events": [
+        "op",
+        "sync"
+      ],
+      "operations": [
+        "apply",
+        "bootstrap",
+        "read",
+        "sync"
+      ],
+      "payload": "opaque-ops",
+      "history": "reconstructible",
+      "initiation": "push-bidi",
+      "writers": "multi-merge",
+      "ordering": "causal_per_origin",
+      "retention": "convergence_safe",
+      "position": "causal_vector",
+      "recovery": "anti_entropy",
+      "merge": "profile_defined_convergent",
+      "lifecycle": "replica_sync"
+    },
+    "text_crdt": {
+      "name": "text_crdt",
+      "class": "profile",
+      "core": "crdt",
+      "contract_version": "v1",
+      "fixed_profile": {
+        "payload": "text_crdt.profile/v1"
+      },
+      "delivery": "stream",
+      "events": [
+        "op",
+        "sync"
+      ],
+      "operations": [
+        "bootstrap",
+        "delete",
+        "insert",
+        "read",
+        "sync"
+      ],
+      "payload": "text-ops",
+      "history": "reconstructible",
+      "initiation": "push-bidi",
+      "writers": "multi-merge",
+      "ordering": "causal_per_origin",
+      "retention": "convergence_safe",
+      "position": "causal_vector",
+      "recovery": "anti_entropy",
+      "merge": "stable_item_text",
+      "lifecycle": "replica_sync"
+    }
+  },
+  "enums": [],
+  "messages": [
+    {
+      "name": "AssistanceIdentity",
+      "options": {},
+      "effective": {
+        "max_depth": 32,
+        "max_encoded_len": null
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "application",
+          "tag": 1,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "workspace",
+          "tag": 2,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "supplier",
+          "tag": 3,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "generation",
+          "tag": 4,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "AssistanceAdvertisement",
+      "options": {},
+      "effective": {
+        "max_depth": 32,
+        "max_encoded_len": null
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "version",
+          "tag": 1,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "identity",
+          "tag": 2,
+          "options": {},
+          "type": {
+            "k": "msg",
+            "name": "AssistanceIdentity"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "share",
+          "tag": 3,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "label",
+          "tag": 4,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "capabilities",
+          "tag": 5,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "bytes"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "expires",
+          "tag": 6,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "AssistanceRequest",
+      "options": {},
+      "effective": {
+        "max_depth": 32,
+        "max_encoded_len": null
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "version",
+          "tag": 1,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "identity",
+          "tag": 2,
+          "options": {},
+          "type": {
+            "k": "msg",
+            "name": "AssistanceIdentity"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "consumer",
+          "tag": 3,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "operation",
+          "tag": 4,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "deadline",
+          "tag": 5,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "token",
+          "tag": 6,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "epoch",
+          "tag": 7,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "payload",
+          "tag": 8,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "bytes"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    },
+    {
+      "name": "AssistanceResult",
+      "options": {},
+      "effective": {
+        "max_depth": 32,
+        "max_encoded_len": null
+      },
+      "reserved_tags": [],
+      "reserved_names": [],
+      "next_id": null,
+      "fields": [
+        {
+          "name": "status",
+          "tag": 1,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "token",
+          "tag": 2,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "epoch",
+          "tag": 3,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "expires",
+          "tag": 4,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "int"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "reason",
+          "tag": 5,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "str"
+          },
+          "optional": true,
+          "transient": false,
+          "merge": null
+        },
+        {
+          "name": "payload",
+          "tag": 6,
+          "options": {},
+          "type": {
+            "k": "scalar",
+            "scalar": "bytes"
+          },
+          "optional": false,
+          "transient": false,
+          "merge": null
+        }
+      ]
+    }
+  ],
+  "services": [],
+  "extensions": []
+}

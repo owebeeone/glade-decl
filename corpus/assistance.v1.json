@@ -1,0 +1,18 @@
+{
+  "AssistanceAdvertisement": {
+    "cbor": "a6012602a401627331026273320362733304627334036273330462733405430501020619012c",
+    "message": "AssistanceAdvertisement"
+  },
+  "AssistanceIdentity": {
+    "cbor": "a401627331026273320362733304627334",
+    "message": "AssistanceIdentity"
+  },
+  "AssistanceRequest": {
+    "cbor": "a8012602a401627331026273320362733304627334036273330462733405260662733607000843080102",
+    "message": "AssistanceRequest"
+  },
+  "AssistanceResult": {
+    "cbor": "a60162733102627332030004182a056273350643060102",
+    "message": "AssistanceResult"
+  }
+}
